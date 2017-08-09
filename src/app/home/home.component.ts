@@ -57,14 +57,12 @@ export class HomeComponent implements OnInit {
     const trackPromises = _.map(_.filter(this.playlists.controls, (playlist) => {
       return playlist.value.include;
     }), (playlist) => {
-      return this.spotify.getPlaylistTracks(this.userId, playlist.value.id).then((playlistTracks) => {
-        tracks = tracks.concat(_.map(playlistTracks.items, track => track.track.id));
-      });
+      return this.getTracks(tracks, playlist.value.id);
     });
 
     let newId: string;
     Promise.all(trackPromises).then(() => {
-      tracks = _.uniq(_.shuffle(tracks));
+      tracks = _.uniq(_.shuffle(_.flatten(tracks)));
       return this.spotify.createPlaylist(this.userId, {
         name: this.form.get('mixName').value
       });
@@ -80,6 +78,17 @@ export class HomeComponent implements OnInit {
       return this.spotify.getPlaylist(this.userId, newId);
     }).then((newPlaylist) => {
       this.newPlaylist = newPlaylist;
+    });
+  }
+
+  private getTracks(tracks: any[], playlistId: string, offset = 0): Promise<any> {
+    return this.spotify.getPlaylistTracks(this.userId, playlistId, {
+      offset: offset
+    }).then((playlistTracks) => {
+      tracks.splice(tracks.length, 0, _.map(playlistTracks.items, track => track.track.id));
+      if (playlistTracks.total > (offset + 100)) {
+        return this.getTracks(tracks, playlistId, offset + 100);
+      }
     });
   }
 
