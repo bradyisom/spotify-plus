@@ -8,11 +8,11 @@
     <button md-raised-button color="primary" (click)="loadPlaylists()">LOAD</button>
   </div>
 
-  <div *ngIf="playlists && !newPlaylist">
+  <div *ngIf="playlists && !newPlaylistInfo.loaded">
     <div formArrayName="playlists">
       <h1>Playlists</h1>
       <div *ngFor="let playlist of playlists.controls; let i=index" [formGroupName]="i">
-        <md-checkbox formControlName="include">{{ playlist.get('name')?.value }}</md-checkbox>
+        <md-checkbox formControlName="include">{{ playlist.get('name')?.value }} ({{ playlist.get('trackCount')?.value }} tracks)</md-checkbox>
       </div>
     </div>
 
@@ -25,11 +25,22 @@
 
   </div>
 
-  <div *ngIf="newPlaylist">
+  <div *ngIf="newPlaylistInfo.loaded">
     <h1>Success!</h1>
+    <h2>Original Playlists</h2>
     <ul>
-      <li>Playlist: {{newPlaylist.name}}</li>
-      <li>Track count: {{newPlaylist.tracks.total}}</li>
+      <li *ngFor="let playlist of newPlaylistInfo.originalPlaylists">
+        {{playlist.name}} - {{playlist.trackCount}} tracks
+      </li>
+    </ul>
+    <h2>Candidate tracks</h2>
+      <ul>
+        <li>{{newPlaylistInfo.uniqueTracks.length}} unique tracks</li>
+      </ul>
+    <h2>New Playlist</h2>
+    <ul>
+      <li>Name: {{newPlaylistInfo.playlist.name}}</li>
+      <li>Track count: {{newPlaylistInfo.playlist.tracks.total}}</li>
     </ul>
   </div>
 </div>

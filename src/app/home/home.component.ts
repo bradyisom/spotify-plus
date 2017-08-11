@@ -12,7 +12,12 @@ import * as _ from 'lodash';
 export class HomeComponent implements OnInit {
 
   public form: FormGroup;
-  public newPlaylist: any;
+  public newPlaylistInfo: any = {
+    originalPlaylists: [],
+    uniqueTracks: [],
+    playlist: null,
+    loaded: false,
+  };
 
   private spotify = new SpotifyWebApi();
   private userId: string;
@@ -40,10 +45,10 @@ export class HomeComponent implements OnInit {
         return this.formBuilder.group({
           id: playlist.id,
           name: playlist.name,
+          trackCount: playlist.tracks.total,
           include: false
         });
       })));
-      // this.playlists = playlists.items;
     });
   }
 
@@ -52,17 +57,22 @@ export class HomeComponent implements OnInit {
   }
 
   public createMix() {
-    let tracks: any[] = [];
+    this.newPlaylistInfo = {
+      originalPlaylists: []
+    };
 
+    let tracks: any[] = [];
     const trackPromises = _.map(_.filter(this.playlists.controls, (playlist) => {
       return playlist.value.include;
     }), (playlist) => {
+      this.newPlaylistInfo.originalPlaylists.push(playlist.value);
       return this.getTracks(tracks, playlist.value.id);
     });
 
     let newId: string;
     Promise.all(trackPromises).then(() => {
-      tracks = _.uniq(_.shuffle(_.flatten(tracks)));
+      this.newPlaylistInfo.uniqueTracks = _.uniq(_.flatten(tracks));
+      tracks = _.shuffle(this.newPlaylistInfo.uniqueTracks);
       return this.spotify.createPlaylist(this.userId, {
         name: this.form.get('mixName').value
       });
@@ -71,13 +81,16 @@ export class HomeComponent implements OnInit {
       const trackGroups = _.chunk(tracks, 100);
       let promise = this.addTrackGroup(newId, trackGroups[0]);
       _.slice(trackGroups, 1).forEach((group) => {
-        promise = this.addTrackGroup(newId, group);
+        promise = promise.then(() => {
+          return this.addTrackGroup(newId, group);
+        });
       });
       return promise;
     }).then(() => {
       return this.spotify.getPlaylist(this.userId, newId);
     }).then((newPlaylist) => {
-      this.newPlaylist = newPlaylist;
+      this.newPlaylistInfo.playlist = newPlaylist;
+      this.newPlaylistInfo.loaded = true;
     });
   }
 
