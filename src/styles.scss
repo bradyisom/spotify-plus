@@ -1,2 +1,20 @@
 /* You can add global styles to this file, and also import other style files */
-@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import "~@angular/material/theming";
+@import "app/app.component.theme.scss";
+
+@include mat-core();
+
+$my-primary: mat-palette($mat-green);
+$my-accent: mat-palette($mat-green);
+$my-theme: mat-dark-theme($my-primary, $my-accent);
+
+@include angular-material-theme($my-theme);
+
+@include app-theme($my-theme);
+
+body, html {
+  margin: 0;
+  font-family: 'Helvitica Neue', Arial, sans-serif;
+}
+
+
