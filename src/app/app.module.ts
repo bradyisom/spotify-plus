@@ -8,15 +8,19 @@ import { environment } from '../environments/environment';
 
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
+import { LoginComponent } from './login/login.component';
+import { AuthGuard } from './auth.guard';
 
 const appRoutes: Routes = [
-  { path: '**', component: HomeComponent }
+  { path: 'home', component: HomeComponent },
+  { path: '**', component: LoginComponent }
 ];
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent
+    HomeComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
@@ -32,7 +36,7 @@ const appRoutes: Routes = [
       { enableTracing: !environment.production }
     )
   ],
-  providers: [],
+  providers: [AuthGuard],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

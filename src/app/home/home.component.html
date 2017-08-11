@@ -1,25 +1,17 @@
 <div [formGroup]="form">
-  <div *ngIf="!playlists">
+  <div *ngIf="playlists && !newPlaylistInfo.loaded">
+
     <md-input-container>
-      <input mdInput type="text" formControlName="token"
-        placeholder="Access token">
+      <input mdInput type="text" formControlName="mixName"
+        placeholder="New mix playlist name">
     </md-input-container>
 
-    <button md-raised-button color="primary" (click)="loadPlaylists()">LOAD</button>
-  </div>
-
-  <div *ngIf="playlists && !newPlaylistInfo.loaded">
-    <div formArrayName="playlists">
-      <h1>Playlists</h1>
+    <div class="select-playlists" formArrayName="playlists">
+      <h4>Select playlists to mix</h4>
       <div *ngFor="let playlist of playlists.controls; let i=index" [formGroupName]="i">
         <md-checkbox formControlName="include">{{ playlist.get('name')?.value }} ({{ playlist.get('trackCount')?.value }} tracks)</md-checkbox>
       </div>
     </div>
-
-    <md-input-container>
-      <input mdInput type="text" formControlName="mixName"
-        placeholder="Mix playlist name">
-    </md-input-container>
 
     <button md-raised-button color="primary" (click)="createMix()">CREATE MIX</button>
 

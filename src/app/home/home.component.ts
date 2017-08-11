@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import * as SpotifyWebApi from 'spotify-web-api-js';
 import * as _ from 'lodash';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-home',
@@ -20,22 +22,41 @@ export class HomeComponent implements OnInit {
   };
 
   private spotify = new SpotifyWebApi();
+  private hashParams: any;
   private userId: string;
 
   constructor(
     private formBuilder: FormBuilder,
+    private route: ActivatedRoute,
+    private router: Router,
   ) { }
 
   ngOnInit() {
-    this.form = this.formBuilder.group({
-      token: '',
-      mixName: `My Mix Playlist`,
-    });
+    this.getHashParams();
+
+    const storedState = localStorage.getItem('login-state');
+    const state = this.hashParams['state'];
+    const token = this.hashParams['access_token'];
+    const expires = +this.hashParams['expires_in'];
+
+    if (token && (!state || state !== storedState)) {
+      alert('There was an error during authentication');
+      this.router.navigate(['/']);
+    } else {
+      localStorage.removeItem('login-state');
+      localStorage.setItem('token', token);
+      localStorage.setItem('tokenExpires', moment().add(expires, 'seconds').toISOString());
+      this.spotify.setAccessToken(token);
+
+      this.form = this.formBuilder.group({
+        mixName: `My Mix Playlist`,
+      });
+
+      this.loadPlaylists();
+    }
   }
 
   public loadPlaylists() {
-    this.spotify.setAccessToken(this.form.value.token);
-
     this.spotify.getMe().then((user) => {
       this.userId = user.id;
     });
@@ -103,5 +124,17 @@ export class HomeComponent implements OnInit {
         return this.getTracks(tracks, playlistId, offset + 100);
       }
     });
+  }
+
+  private getHashParams() {
+    const subscription = this.route.fragment.subscribe((fragment: string) => {
+      let e: RegExpExecArray;
+      const r = /([^&;=]+)=?([^&;]*)/g;
+      this.hashParams = {};
+      while (e = r.exec(fragment)) {
+        this.hashParams[e[1]] = decodeURIComponent(e[2]);
+      }
+    });
+    subscription.unsubscribe();
   }
 }
