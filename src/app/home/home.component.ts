@@ -29,7 +29,7 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     this.form = this.formBuilder.group({
       token: '',
-      mixName: `My mix playlist`,
+      mixName: `My Mix Playlist`,
     });
   }
 
@@ -79,10 +79,10 @@ export class HomeComponent implements OnInit {
     }).then((newPlaylist) => {
       newId = newPlaylist.id;
       const trackGroups = _.chunk(tracks, 100);
-      let promise = this.addTrackGroup(newId, trackGroups[0]);
+      let promise = this.spotify.addTracksToPlaylist(this.userId, newId, trackGroups[0]);
       _.slice(trackGroups, 1).forEach((group) => {
         promise = promise.then(() => {
-          return this.addTrackGroup(newId, group);
+          return this.spotify.addTracksToPlaylist(this.userId, newId, group);
         });
       });
       return promise;
@@ -98,16 +98,10 @@ export class HomeComponent implements OnInit {
     return this.spotify.getPlaylistTracks(this.userId, playlistId, {
       offset: offset
     }).then((playlistTracks) => {
-      tracks.splice(tracks.length, 0, _.map(playlistTracks.items, track => track.track.id));
+      tracks.splice(tracks.length, 0, _.map(playlistTracks.items, track => track.track.uri));
       if (playlistTracks.total > (offset + 100)) {
         return this.getTracks(tracks, playlistId, offset + 100);
       }
     });
-  }
-
-  private addTrackGroup(playlistId, group): Promise<any> {
-    return this.spotify.addTracksToPlaylist(this.userId, playlistId, _.map(group, (track) => {
-      return `spotify:track:${track}`;
-    }));
   }
 }
