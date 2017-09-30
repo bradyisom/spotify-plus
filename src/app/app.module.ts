@@ -3,7 +3,8 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MdButtonModule, MdInputModule, MdCheckboxModule, MdIconModule } from '@angular/material';
+import { MatButtonModule, MatInputModule, MatCheckboxModule, MatIconModule } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material';
 import { environment } from '../environments/environment';
 
 import { AppComponent } from './app.component';
@@ -27,16 +28,18 @@ const appRoutes: Routes = [
     BrowserAnimationsModule,
     FormsModule,
     ReactiveFormsModule,
-    MdButtonModule,
-    MdInputModule,
-    MdCheckboxModule,
-    MdIconModule,
+    MatButtonModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatIconModule,
     RouterModule.forRoot(
       appRoutes,
       { enableTracing: !environment.production }
     )
   ],
-  providers: [AuthGuard],
+  providers: [ AuthGuard,
+    { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

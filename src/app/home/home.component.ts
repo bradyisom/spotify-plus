@@ -40,7 +40,7 @@ export class HomeComponent implements OnInit {
     const expires = +this.hashParams['expires_in'];
 
     if (token && (!state || state !== storedState)) {
-      alert('There was an error during authentication');
+      // alert('There was an error during authentication');
       this.router.navigate(['/']);
     } else {
       localStorage.removeItem('login-state');
@@ -61,8 +61,9 @@ export class HomeComponent implements OnInit {
       this.userId = user.id;
     });
 
-    this.spotify.getUserPlaylists().then((playlists) => {
-      this.form.addControl('playlists', this.formBuilder.array(_.map(playlists.items, (playlist) => {
+    const playlists: any[] = [];
+    this.getPlaylists(playlists).then(() => {
+      this.form.addControl('playlists', this.formBuilder.array(_.map(_.flatten(playlists), (playlist) => {
         return this.formBuilder.group({
           id: playlist.id,
           name: playlist.name,
@@ -112,6 +113,18 @@ export class HomeComponent implements OnInit {
     }).then((newPlaylist) => {
       this.newPlaylistInfo.playlist = newPlaylist;
       this.newPlaylistInfo.loaded = true;
+    });
+  }
+
+  private getPlaylists(playlists: any[], offset = 0): Promise<any> {
+    return this.spotify.getUserPlaylists(this.userId, {
+      offset: offset,
+      limit: 50
+    }).then((playlistChunk) => {
+      playlists.splice(playlists.length, 0, playlistChunk.items);
+      if (playlistChunk.total > (offset + 50)) {
+        return this.getPlaylists(playlists, offset + 50);
+      }
     });
   }
 
