@@ -9,7 +9,7 @@
     <div class="select-playlists" formArrayName="playlists">
       <h2>Select playlists to mix</h2>
       <div *ngFor="let playlist of playlists.controls; let i=index" [formGroupName]="i">
-        <mat-checkbox formControlName="include">{{ playlist.get('name')?.value }} ({{ playlist.get('trackCount')?.value }} tracks)</mat-checkbox>
+        <mat-checkbox formControlName="include">{{ playlist.get('name')?.value }} ({{playlist.get('owner').value}} - {{ playlist.get('trackCount')?.value }} tracks)</mat-checkbox>
       </div>
     </div>
 

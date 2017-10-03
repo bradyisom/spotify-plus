@@ -64,10 +64,15 @@ export class HomeComponent implements OnInit {
     const playlists: any[] = [];
     this.getPlaylists(playlists).then(() => {
       this.form.addControl('playlists', this.formBuilder.array(_.map(_.flatten(playlists), (playlist) => {
+        let owner = 'Me';
+        if (playlist.owner.id !== this.userId) {
+          owner = playlist.owner.display_name ? playlist.owner.display_name : playlist.owner.id;
+        }
         return this.formBuilder.group({
           id: playlist.id,
           name: playlist.name,
           trackCount: playlist.tracks.total,
+          owner: owner,
           include: false
         });
       })));
@@ -122,8 +127,8 @@ export class HomeComponent implements OnInit {
       limit: 50
     }).then((playlistChunk) => {
       playlists.splice(playlists.length, 0, playlistChunk.items);
-      if (playlistChunk.total > (offset + 50)) {
-        return this.getPlaylists(playlists, offset + 50);
+      if (playlistChunk.total > (offset + playlistChunk.limit)) {
+        return this.getPlaylists(playlists, offset + playlistChunk.limit);
       }
     });
   }
