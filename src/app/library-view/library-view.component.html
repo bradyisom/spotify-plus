@@ -1,0 +1,69 @@
+<div class="library-ct" *ngIf="library.user">
+  <mat-card>
+    <mat-card-title-group>
+      <img mat-card-sm-image [src]="library.user.images[0].url">
+      <mat-card-title>{{library.user.display_name}}</mat-card-title>
+    </mat-card-title-group>
+    <mat-card-content>
+      <mat-input-container *ngIf="!library.createdPlaylist">
+        <input matInput type="text" [(ngModel)]="playlistName"
+          placeholder="New mix playlist name">
+      </mat-input-container>
+      <div *ngIf="library.creatingPlaylist && !library.createdPlaylist">
+        Creating playlist...
+        <mat-progress-bar color="primary"
+          mode="indeterminate"></mat-progress-bar>
+        </div>
+      <div *ngIf="library.createdPlaylist">
+        <h1>Success!</h1>
+        <h2>Original Playlists</h2>
+        <ul>
+          <li *ngFor="let playlist of playlists.selectedOptions.selected">
+            {{playlist.value.name}} - {{playlist.value.tracks.total}} tracks
+          </li>
+        </ul>
+        <h2>Candidate tracks</h2>
+          <ul>
+            <li>{{library.uniqueTracks.length}} unique tracks</li>
+          </ul>
+        <h2>New Playlist</h2>
+        <ul>
+          <li>Name: {{library.newPlaylist.name}}</li>
+          <li>Track count: {{library.newPlaylist.tracks.total}}</li>
+        </ul>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button *ngIf="!library.creatingPlaylist"
+        mat-raised-button color="primary" (click)="createMix()">CREATE MIX</button>
+      <button *ngIf="library.createdPlaylist"
+        mat-raised-button color="primary" (click)="reset()">CREATE ANOTHER</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <mat-tab-group>
+    <mat-tab label="Playlists">
+      <mat-selection-list #playlists>
+        <mat-list-option *ngFor="let playlist of library.playlists"
+            [value]="playlist">
+          <img matListAvatar [src]="playlist.images[playlist.images.length-1]?.url">
+          <h3 matLine>{{ playlist.name }}</h3>
+          <p matLine>{{playlist.ownerDisplay}} - {{ playlist.tracks.total }} tracks</p>
+        </mat-list-option>
+      </mat-selection-list>
+    </mat-tab>
+    <mat-tab label="Artists">
+      <mat-selection-list #artists>
+          <mat-list-option *ngFor="let artist of library.artists"
+              [value]="artist">
+            <img matListAvatar [src]="artist.images[artist.images.length-1]?.url">
+            <h3 matLine>{{ artist.name }}</h3>
+          </mat-list-option>
+        </mat-selection-list>
+    </mat-tab>
+    <mat-tab label="Genres">
+      Genres
+    </mat-tab>
+  </mat-tab-group>
+
+</div>

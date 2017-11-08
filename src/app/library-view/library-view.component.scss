@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+}
+
+.library-ct {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+}
+
+mat-card-title-group {
+  img {
+    border-radius: 50%;
+  }
+}
+
+img.mat-list-avatar {
+  position: absolute;
+  left: 4px;
+  top: calc(50% - 20px);
+}

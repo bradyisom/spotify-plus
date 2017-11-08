@@ -6,6 +6,8 @@ import * as SpotifyWebApi from 'spotify-web-api-js';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
+import { UserLibraryService } from '../user-library.service';
+
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -23,12 +25,12 @@ export class HomeComponent implements OnInit {
 
   private spotify = new SpotifyWebApi();
   private hashParams: any;
-  private userId: string;
 
   constructor(
     private formBuilder: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
+    public library: UserLibraryService,
   ) { }
 
   ngOnInit() {
@@ -52,20 +54,16 @@ export class HomeComponent implements OnInit {
         mixName: `My Mix Playlist`,
       });
 
-      this.loadPlaylists();
+      this.library.loadUser();
     }
   }
 
   public loadPlaylists() {
-    this.spotify.getMe().then((user) => {
-      this.userId = user.id;
-    });
-
     const playlists: any[] = [];
-    this.getPlaylists(playlists).then(() => {
+    return this.getPlaylists(playlists).then(() => {
       this.form.addControl('playlists', this.formBuilder.array(_.map(_.flatten(playlists), (playlist) => {
         let owner = 'Me';
-        if (playlist.owner.id !== this.userId) {
+        if (playlist.owner.id !== this.library.user.id) {
           owner = playlist.owner.display_name ? playlist.owner.display_name : playlist.owner.id;
         }
         return this.formBuilder.group({
@@ -100,29 +98,30 @@ export class HomeComponent implements OnInit {
     Promise.all(trackPromises).then(() => {
       this.newPlaylistInfo.uniqueTracks = _.uniq(_.flatten(tracks));
       tracks = _.shuffle(this.newPlaylistInfo.uniqueTracks);
-      return this.spotify.createPlaylist(this.userId, {
+      return this.spotify.createPlaylist(this.library.user.id, {
         name: this.form.get('mixName').value
       });
     }).then((newPlaylist) => {
       newId = newPlaylist.id;
       const trackGroups = _.chunk(tracks, 100);
-      let promise = this.spotify.addTracksToPlaylist(this.userId, newId, trackGroups[0]);
+      let promise = this.spotify.addTracksToPlaylist(this.library.user.id, newId, trackGroups[0]);
       _.slice(trackGroups, 1).forEach((group) => {
         promise = promise.then(() => {
-          return this.spotify.addTracksToPlaylist(this.userId, newId, group);
+          return this.spotify.addTracksToPlaylist(this.library.user.id, newId, group);
         });
       });
       return promise;
     }).then(() => {
-      return this.spotify.getPlaylist(this.userId, newId);
+      return this.spotify.getPlaylist(this.library.user.id, newId);
     }).then((newPlaylist) => {
       this.newPlaylistInfo.playlist = newPlaylist;
       this.newPlaylistInfo.loaded = true;
     });
   }
 
+
   private getPlaylists(playlists: any[], offset = 0): Promise<any> {
-    return this.spotify.getUserPlaylists(this.userId, {
+    return this.spotify.getUserPlaylists(this.library.user.id, {
       offset: offset,
       limit: 50
     }).then((playlistChunk) => {
@@ -134,7 +133,7 @@ export class HomeComponent implements OnInit {
   }
 
   private getTracks(tracks: any[], playlistId: string, offset = 0): Promise<any> {
-    return this.spotify.getPlaylistTracks(this.userId, playlistId, {
+    return this.spotify.getPlaylistTracks(this.library.user.id, playlistId, {
       offset: offset
     }).then((playlistTracks) => {
       tracks.splice(tracks.length, 0, _.map(playlistTracks.items, track => track.track.uri));

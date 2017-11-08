@@ -22,6 +22,7 @@ export class LoginComponent implements OnInit {
     const state = _.random(0, 1, true).toString();
     const scope = [
       'user-read-private',
+      'user-library-read',
       'playlist-read-private',
       'playlist-modify-public',
       'playlist-modify-private',

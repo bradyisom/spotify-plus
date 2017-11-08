@@ -1,4 +1,48 @@
-<div [formGroup]="form">
+<div *ngIf="library.user && form" [formGroup]="form">
+
+  <mat-card>
+    <mat-card-title-group>
+      <img mat-card-sm-image [src]="library.user.images[0].url">
+      <mat-card-title>{{library.user.display_name}}</mat-card-title>
+    </mat-card-title-group>
+    <mat-card-actions >
+        <button mat-raised-button color="primary" (click)="library.loadLibrary()"
+          *ngIf="!library.loading && !library.loaded">LOAD LIBRARY</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div class="progress-section" *ngIf="library.playlistCount">
+      <div>Playlists loaded: {{library.playlistsLoaded}} / {{library.playlistCount}}</div>
+      <mat-progress-bar color="primary"
+      mode="determinate"
+      [value]="(library.playlistsLoaded / library.playlistCount) * 100"></mat-progress-bar>
+  </div>
+  <div class="progress-section" *ngIf="library.trackCount">
+      <div>Tracks loaded: {{library.tracksLoaded}} / {{library.trackCount}}</div>
+      <mat-progress-bar color="primary"
+      mode="determinate"
+      [value]="(library.tracksLoaded / library.trackCount) * 100"></mat-progress-bar>
+  </div>
+  <div class="progress-section" *ngIf="library.albumCount">
+      <div>Albums loaded: {{library.albumsLoaded}} / {{library.albumCount}}</div>
+      <mat-progress-bar color="primary"
+      mode="determinate"
+      [value]="(library.albumsLoaded / library.albumCount) * 100"></mat-progress-bar>
+  </div>
+  <div class="progress-section" *ngIf="library.artistCount">
+      <div>Artists loaded: {{library.artistsLoaded}} / {{library.artistCount}}</div>
+      <mat-progress-bar color="primary"
+      mode="determinate"
+      [value]="(library.artistsLoaded / library.artistCount) * 100"></mat-progress-bar>
+  </div>
+  <div class="progress-section" *ngIf="library.genreCount">
+      <div>Genres: {{library.genreCount}}</div>
+  </div>
+
+  <button mat-raised-button color="primary" routerLink="/library"
+    *ngIf="library.loaded">MAKE SOME MAGIC</button>
+
+
   <div *ngIf="playlists && !newPlaylistInfo.loaded">
 
     <mat-input-container>

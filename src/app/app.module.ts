@@ -3,25 +3,32 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule, MatInputModule, MatCheckboxModule, MatIconModule } from '@angular/material';
-import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material';
+import {
+  MatButtonModule, MatInputModule, MatCheckboxModule,
+  MatIconModule, MatProgressBarModule, MatStepperModule,
+  MatCardModule, MatTabsModule, MatListModule,
+} from '@angular/material';
 import { environment } from '../environments/environment';
 
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
 import { AuthGuard } from './auth.guard';
+import { UserLibraryService } from './user-library.service';
+import { LibraryViewComponent } from './library-view/library-view.component';
 
 const appRoutes: Routes = [
   { path: 'home', component: HomeComponent },
-  { path: '**', component: LoginComponent }
+  { path: 'library', component: LibraryViewComponent },
+  { path: '', pathMatch: 'full', component: LoginComponent }
 ];
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
-    LoginComponent
+    LoginComponent,
+    LibraryViewComponent
   ],
   imports: [
     BrowserModule,
@@ -29,16 +36,21 @@ const appRoutes: Routes = [
     FormsModule,
     ReactiveFormsModule,
     MatButtonModule,
-    MatInputModule,
+    MatCardModule,
     MatCheckboxModule,
     MatIconModule,
+    MatInputModule,
+    MatListModule,
+    MatProgressBarModule,
+    MatStepperModule,
+    MatTabsModule,
     RouterModule.forRoot(
       appRoutes,
-      { enableTracing: !environment.production }
+      // { enableTracing: !environment.production }
     )
   ],
   providers: [ AuthGuard,
-    { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
+    UserLibraryService,
   ],
   bootstrap: [AppComponent]
 })
