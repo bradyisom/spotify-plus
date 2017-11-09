@@ -25,3 +25,20 @@ img.mat-list-avatar {
   left: 4px;
   top: calc(50% - 20px);
 }
+
+.selected-playlist {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  > * {
+    flex: 1 1 auto;
+    padding: 0 16px;
+  }
+  > span {
+    width: 40%;
+    text-align: right;
+  }
+  > mat-slider {
+    width: 60%;
+  }
+}

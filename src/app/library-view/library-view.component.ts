@@ -1,6 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSelectionList } from '@angular/material';
+import { AngularFirestore, associateQuery, AngularFirestoreDocument, AngularFirestoreCollection } from 'angularfire2/firestore';
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import * as _ from 'lodash';
 
@@ -13,9 +16,10 @@ import { UserLibraryService } from '../user-library.service';
 })
 export class LibraryViewComponent implements OnInit {
 
-  public playlistName: string;
+  public playlistName = 'My new playlist';
+  public playlistTime = 4;
 
-  @ViewChild('playlists') private playlists: MatSelectionList;
+  @ViewChild('playlists') public playlists: MatSelectionList;
 
   constructor(
     private router: Router,
@@ -25,19 +29,25 @@ export class LibraryViewComponent implements OnInit {
   ngOnInit() {
     if (!this.library.user) {
       this.router.navigate(['/']);
+    } else {
+      this.library.loadPlaylistChunk();
     }
+  }
+
+  getId(object: any) {
+    return object.id;
   }
 
   public createMix() {
     const selectedPlaylists = _.map(this.playlists.selectedOptions.selected, 'value');
-    this.library.createMix(this.playlistName, {
-      playlists: selectedPlaylists
+    this.library.createMix(this.playlistName, this.playlistTime * 60, {
+      playlists: selectedPlaylists,
     });
     console.log('playlists', selectedPlaylists);
   }
 
   public reset() {
-    this.playlistName = '';
+    // this.playlistName = 'My new playlist';
     this.playlists.deselectAll();
     this.library.reset();
   }

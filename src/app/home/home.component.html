@@ -5,9 +5,14 @@
       <img mat-card-sm-image [src]="library.user.images[0].url">
       <mat-card-title>{{library.user.display_name}}</mat-card-title>
     </mat-card-title-group>
-    <mat-card-actions >
+    <mat-card-actions *ngIf="library.initialized">
         <button mat-raised-button color="primary" (click)="library.loadLibrary()"
-          *ngIf="!library.loading && !library.loaded">LOAD LIBRARY</button>
+          *ngIf="!library.loading">
+          <span *ngIf="!library.loaded">LOAD LIBRARY</span>
+          <span *ngIf="library.loaded">RELOAD LIBRARY</span>
+        </button>
+        <button mat-raised-button color="primary" routerLink="/library"
+          *ngIf="!library.loading && library.loaded">MAKE SOME MAGIC</button>
     </mat-card-actions>
   </mat-card>
 
@@ -39,8 +44,6 @@
       <div>Genres: {{library.genreCount}}</div>
   </div>
 
-  <button mat-raised-button color="primary" routerLink="/library"
-    *ngIf="library.loaded">MAKE SOME MAGIC</button>
 
 
   <div *ngIf="playlists && !newPlaylistInfo.loaded">
