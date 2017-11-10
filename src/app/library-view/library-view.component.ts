@@ -18,6 +18,7 @@ export class LibraryViewComponent implements OnInit {
 
   public playlistName = 'My new playlist';
   public playlistTime = 4;
+  public savePlaylist = true;
 
   @ViewChild('playlists') public playlists: MatSelectionList;
 
@@ -42,6 +43,7 @@ export class LibraryViewComponent implements OnInit {
     const selectedPlaylists = _.map(this.playlists.selectedOptions.selected, 'value');
     this.library.createMix(this.playlistName, this.playlistTime * 60, {
       playlists: selectedPlaylists,
+      savePlaylist: this.savePlaylist,
     });
     console.log('playlists', selectedPlaylists);
   }

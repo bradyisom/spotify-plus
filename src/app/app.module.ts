@@ -9,6 +9,7 @@ import {
   MatButtonModule, MatInputModule, MatCheckboxModule,
   MatIconModule, MatProgressBarModule, MatStepperModule,
   MatCardModule, MatTabsModule, MatListModule, MatSliderModule,
+  MatSnackBarModule,
 } from '@angular/material';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { environment } from '../environments/environment';
@@ -46,6 +47,7 @@ const appRoutes: Routes = [
     MatListModule,
     MatProgressBarModule,
     MatSliderModule,
+    MatSnackBarModule,
     MatStepperModule,
     MatTabsModule,
     InfiniteScrollModule,

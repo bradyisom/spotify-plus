@@ -20,6 +20,11 @@ mat-card-title-group {
   }
 }
 
+::ng-deep .mat-tab-body-active .mat-tab-body-content {
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
 img.mat-list-avatar {
   position: absolute;
   left: 4px;

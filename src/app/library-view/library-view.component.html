@@ -7,17 +7,20 @@
     <mat-card-content>
       <div *ngIf="!library.createdPlaylist">
         <mat-input-container>
-          <input matInput type="text" [(ngModel)]="playlistName"
+          <input matInput #playlistNameEl type="text" [(ngModel)]="playlistName"
+            (focus)="playlistNameEl.select()"
             placeholder="New mix playlist name">
         </mat-input-container>
         <mat-input-container>
-          <input matInput type="number" [(ngModel)]="playlistTime"
+          <input matInput #playlistTimeEl type="number" [(ngModel)]="playlistTime"
+            (focus)="playlistTimeEl.select()"
             placeholder="Approximate length (hours)">
         </mat-input-container>
+        <mat-checkbox [(ngModel)]="savePlaylist">Save mix for later</mat-checkbox>
         <div class="selected-playlists" *ngIf="playlists.selectedOptions.selected.length">
           <div class="selected-playlist" *ngFor="let playlist of playlists.selectedOptions.selected">
             <span>{{playlist.value.name}}</span>
-            <mat-slider thumbLabel
+            <mat-slider thumbLabel value="100"
               [(ngModel)]="playlist.value.weight"></mat-slider>
           </div>
         </div>

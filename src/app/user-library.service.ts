@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreDocument, AngularFirestoreCollection } from 'angularfire2/firestore';
+import { MatSnackBar } from '@angular/material';
 
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
@@ -56,21 +57,23 @@ export class UserLibraryService {
   private _playlistsDone = false;
   private _playlistCollection = new BehaviorSubject<any>([]);
   private playlistCollection: AngularFirestoreCollection<any>;
-  public playlists: Observable<any>;
 
   private trackCollection: AngularFirestoreCollection<any>;
   private albumCollection: AngularFirestoreCollection<any>;
   private artistCollection: AngularFirestoreCollection<any>;
   private genreCollection: AngularFirestoreCollection<any>;
+  private mixesCollection: AngularFirestoreCollection<any>;
 
-  // public playlists: Observable<any>;
+  public playlists: Observable<any>;
   public tracks: Observable<any>;
   public albums: Observable<any>;
   public artists: Observable<any>;
   public genres: Observable<any>;
+  public mixes: Observable<any>;
 
   constructor(
-    private afs: AngularFirestore
+    private afs: AngularFirestore,
+    private snackBar: MatSnackBar,
   ) { }
 
   public loadUser() {
@@ -91,6 +94,10 @@ export class UserLibraryService {
       this.artists = this.artistCollection.valueChanges();
       this.genreCollection = this.userDataDoc.collection('genres', ref => ref.orderBy('name'));
       this.genres = this.genreCollection.valueChanges();
+
+      this.mixesCollection = this.userDataDoc.collection('mixes', ref => ref.orderBy('name'));
+      this.mixes = this.mixesCollection.valueChanges();
+
       this.userDataDoc.collection('tracks', ref => ref.limit(1))
         .snapshotChanges()
         .take(1).do(c => {
@@ -305,21 +312,59 @@ export class UserLibraryService {
 
   public createMix(name: string, approxTime: number, options: {
     playlists: any[],
+    savePlaylist?: boolean,
+    remixId?: string,
   }): Promise<any> {
     this.creatingPlaylist = true;
 
+    let newId: string;
+    return this.getMixTracks(options.playlists, approxTime).then(() => {
+      return this.spotify.createPlaylist(this.user.id, {
+        name: name
+      });
+    }).then((newPlaylist) => {
+      newId = newPlaylist.id;
+      return this.addTracksToPlaylist(newId, this.uniqueTracks);
+    }).then(() => {
+      return this.spotify.getPlaylist(this.user.id, newId);
+    }).then((newPlaylist) => {
+      this.newPlaylist = newPlaylist;
+      if (options.savePlaylist) {
+        const newMix = {
+          id: newPlaylist.id,
+          name: newPlaylist.name,
+          time: approxTime,
+          images: newPlaylist.images,
+          playlists: _.map(options.playlists, (p) => {
+            return {
+              id: p.id,
+              name: p.name,
+              weight: p.weight,
+            };
+          })
+        };
+        // console.log('newMix', newMix);
+        return this.userDataDoc.collection('mixes').doc(newPlaylist.id).set(newMix);
+      }
+      return Promise.resolve();
+    }).then(() => {
+      this.createdPlaylist = true;
+    });
+  }
+
+  private getMixTracks(playlists: any[], approxTime: number) {
     const tracks: any = {};
-    const trackPromises = _.map(options.playlists, (playlist) => {
+    const trackPromises = _.map(playlists, (playlist) => {
       const trackList: any[] = [];
       tracks[playlist.id] = trackList;
       return this.getTracks(trackList, playlist.id);
     });
 
-    const weights = _.flatten(_.map(options.playlists, (playlist) => {
+    const weights = _.flatten(_.map(playlists, (playlist) => {
+      playlist.weight = playlist.weight || 100;
       return _.times(playlist.weight, () => playlist.id);
     }));
 
-    let newId: string;
     return Promise.all(trackPromises).then(() => {
       Object.keys(tracks).forEach((playlistId: string) => {
         tracks[playlistId] = _.shuffle(_.flatten(tracks[playlistId]));
@@ -341,24 +386,6 @@ export class UserLibraryService {
           break;
         }
       }
-      return this.spotify.createPlaylist(this.user.id, {
-        name: name
-      });
-    }).then((newPlaylist) => {
-      newId = newPlaylist.id;
-      const trackGroups = _.chunk(this.uniqueTracks, 100);
-      let promise = this.spotify.addTracksToPlaylist(this.user.id, newId, trackGroups[0]);
-      _.slice(trackGroups, 1).forEach((group) => {
-        promise = promise.then(() => {
-          return this.spotify.addTracksToPlaylist(this.user.id, newId, group);
-        });
-      });
-      return promise;
-    }).then(() => {
-      return this.spotify.getPlaylist(this.user.id, newId);
-    }).then((newPlaylist) => {
-      this.newPlaylist = newPlaylist;
-      this.createdPlaylist = true;
     });
   }
 
@@ -376,6 +403,53 @@ export class UserLibraryService {
         return this.getTracks(tracks, playlistId, offset + 100);
       }
     });
+  }
+
+  private addTracksToPlaylist(playlistId: string, tracks: any[], replace = false) {
+    const trackGroups = _.chunk(tracks, 100);
+    let promise: Promise<any>;
+    if (replace) {
+      promise = this.spotify.replaceTracksInPlaylist(this.user.id, playlistId, trackGroups[0]);
+    } else {
+      promise = this.spotify.addTracksToPlaylist(this.user.id, playlistId, trackGroups[0]);
+    }
+    _.slice(trackGroups, 1).forEach((group) => {
+      promise = promise.then(() => {
+        return this.spotify.addTracksToPlaylist(this.user.id, playlistId, group);
+      });
+    });
+    return promise;
+  }
+
+  // private deleteAllTracks(playlistId: string): Promise<any> {
+  //   return this.spotify.getPlaylist(this.user.id, playlistId).then((playlist): Promise<any> => {
+  //     const trackIds = _.map(playlist.tracks.items, track => track.track.uri);
+  //     if (!trackIds.length) {
+  //       return Promise.resolve();
+  //     }
+  //     const trackGroups = _.chunk(trackIds, 100);
+  //     let promise = this.spotify.removeTracksFromPlaylist(this.user.id, playlistId, trackGroups[0]);
+  //     _.slice(trackGroups, 1).forEach((group) => {
+  //       promise = promise.then(() => {
+  //         return this.spotify.removeTracksFromPlaylist(this.user.id, playlistId, group);
+  //       });
+  //     });
+  //     return promise;
+  //   });
+  // }
+
+  public remix(mix: any) {
+    return this.getMixTracks(mix.playlists, mix.time).then(() => {
+      return this.addTracksToPlaylist(mix.id, this.uniqueTracks, true);
+    }).then(() => {
+      this.snackBar.open(`Remixed ${mix.name}`, undefined, {
+        duration: 3000
+      });
+    });
+  }
+
+  public deleteMix(mix: any) {
+    return this.mixesCollection.doc(mix.id).delete();
   }
 
   public reset() {

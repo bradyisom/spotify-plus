@@ -5,6 +5,21 @@
       <img mat-card-sm-image [src]="library.user.images[0].url">
       <mat-card-title>{{library.user.display_name}}</mat-card-title>
     </mat-card-title-group>
+    <mat-card-content *ngIf="library.initialized && library.mixes | async as mixes">
+      <mat-list *ngIf="mixes.length">
+        <h3 mat-subheader>Saved mixes</h3>
+        <mat-list-item *ngFor="let mix of mixes">
+          <img matListAvatar [src]="mix.images[mix.images.length-1]?.url">
+          <p matLine>{{mix.name}}</p>
+          <button mat-icon-button (click)="library.remix(mix)">
+            <mat-icon>autorenew</mat-icon>
+          </button>
+          <button mat-icon-button (click)="library.deleteMix(mix)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
     <mat-card-actions *ngIf="library.initialized">
         <button mat-raised-button color="primary" (click)="library.loadLibrary()"
           *ngIf="!library.loading">
@@ -12,7 +27,7 @@
           <span *ngIf="library.loaded">RELOAD LIBRARY</span>
         </button>
         <button mat-raised-button color="primary" routerLink="/library"
-          *ngIf="!library.loading && library.loaded">MAKE SOME MAGIC</button>
+          *ngIf="!library.loading && library.loaded">CREATE A NEW MIX</button>
     </mat-card-actions>
   </mat-card>
 
