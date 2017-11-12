@@ -1,9 +1,11 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AngularFireModule } from 'angularfire2';
+import { AngularFireAuthModule } from 'angularfire2/auth';
 import { AngularFirestoreModule } from 'angularfire2/firestore';
 import {
   MatButtonModule, MatInputModule, MatCheckboxModule,
@@ -17,14 +19,19 @@ import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
-import { AuthGuard } from './auth.guard';
+import { AuthService } from './auth.service';
 import { UserLibraryService } from './user-library.service';
 import { LibraryViewComponent } from './library-view/library-view.component';
 
 const appRoutes: Routes = [
-  { path: 'home', component: HomeComponent },
-  { path: 'library', component: LibraryViewComponent },
-  { path: '', pathMatch: 'full', component: LoginComponent }
+  { path: '', pathMatch: 'full', component: LoginComponent },
+  { path: '', canActivateChild: [AuthService],
+    children: [
+      { path: 'home', component: HomeComponent },
+      { path: 'library', component: LibraryViewComponent },
+    ]
+  },
+  { path: '**', redirectTo: '' }
 ];
 
 @NgModule({
@@ -39,6 +46,7 @@ const appRoutes: Routes = [
     BrowserAnimationsModule,
     FormsModule,
     ReactiveFormsModule,
+    HttpClientModule,
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -55,6 +63,7 @@ const appRoutes: Routes = [
       appRoutes,
       // { enableTracing: !environment.production }
     ),
+    AngularFireAuthModule,
     AngularFireModule.initializeApp({
       apiKey: 'AIzaSyCIIcFjibxE6aQwhC2rg4vgCq-O4hegqWM',
       authDomain: 'spotify-plus.firebaseapp.com',
@@ -65,7 +74,8 @@ const appRoutes: Routes = [
     }),
     AngularFirestoreModule.enablePersistence()
   ],
-  providers: [ AuthGuard,
+  providers: [
+    AuthService,
     UserLibraryService,
   ],
   bootstrap: [AppComponent]

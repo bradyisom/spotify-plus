@@ -58,43 +58,4 @@
   <div class="progress-section" *ngIf="library.genreCount">
       <div>Genres: {{library.genreCount}}</div>
   </div>
-
-
-
-  <div *ngIf="playlists && !newPlaylistInfo.loaded">
-
-    <mat-input-container>
-      <input matInput type="text" formControlName="mixName"
-        placeholder="New mix playlist name">
-    </mat-input-container>
-
-    <div class="select-playlists" formArrayName="playlists">
-      <h2>Select playlists to mix</h2>
-      <div *ngFor="let playlist of playlists.controls; let i=index" [formGroupName]="i">
-        <mat-checkbox formControlName="include">{{ playlist.get('name')?.value }} ({{playlist.get('owner').value}} - {{ playlist.get('trackCount')?.value }} tracks)</mat-checkbox>
-      </div>
-    </div>
-
-    <button mat-raised-button color="primary" (click)="createMix()">CREATE MIX</button>
-
-  </div>
-
-  <div *ngIf="newPlaylistInfo.loaded">
-    <h1>Success!</h1>
-    <h2>Original Playlists</h2>
-    <ul>
-      <li *ngFor="let playlist of newPlaylistInfo.originalPlaylists">
-        {{playlist.name}} - {{playlist.trackCount}} tracks
-      </li>
-    </ul>
-    <h2>Candidate tracks</h2>
-      <ul>
-        <li>{{newPlaylistInfo.uniqueTracks.length}} unique tracks</li>
-      </ul>
-    <h2>New Playlist</h2>
-    <ul>
-      <li>Name: {{newPlaylistInfo.playlist.name}}</li>
-      <li>Track count: {{newPlaylistInfo.playlist.tracks.total}}</li>
-    </ul>
-  </div>
 </div>

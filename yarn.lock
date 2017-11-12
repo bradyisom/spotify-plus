@@ -251,9 +251,19 @@
   dependencies:
     "@types/jasmine" "*"
 
+"@types/jsonwebtoken@^7.2.3":
+  version "7.2.3"
+  resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-7.2.3.tgz#483c8f39945e1e6d308dcc51fd4aeca5208d4dca"
+  dependencies:
+    "@types/node" "*"
+
 "@types/lodash@^4.14.82":
   version "4.14.82"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.82.tgz#18948897f415ef199a93156a66ef7ce1d0d005b9"
+
+"@types/node@*":
+  version "8.0.51"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.51.tgz#b31d716fb8d58eeb95c068a039b9b6292817d5fb"
 
 "@types/node@^6.0.46":
   version "6.0.88"

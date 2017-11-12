@@ -11,6 +11,8 @@ import * as SpotifyWebApi from 'spotify-web-api-js';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
+import { AuthService } from './auth.service';
+
 @Injectable()
 export class UserLibraryService {
   public user: any;
@@ -73,39 +75,38 @@ export class UserLibraryService {
 
   constructor(
     private afs: AngularFirestore,
+    private auth: AuthService,
     private snackBar: MatSnackBar,
   ) { }
 
   public loadUser() {
-    this.spotify.getMe().then((user) => {
-      this.user = user;
-      this.userDataDoc = this.afs.doc(`/users/${this.user.id}`);
-      this.userDataDoc.set(user);
+    this.user = this.auth.user;
+    this.userDataDoc = this.afs.doc(`/users/${this.user.id}`);
+    this.userDataDoc.set(this.user);
 
-      this.playlistCollection = this.userDataDoc.collection('playlists', ref => ref.orderBy('index'));
-      this.playlists = this._playlistCollection.asObservable().
-        scan((acc, val) => acc.concat(val));
+    this.playlistCollection = this.userDataDoc.collection('playlists', ref => ref.orderBy('index'));
+    this.playlists = this._playlistCollection.asObservable().
+      scan((acc, val) => acc.concat(val));
 
-      this.trackCollection = this.userDataDoc.collection('tracks', ref => ref.orderBy('added_at'));
-      this.tracks = this.trackCollection.valueChanges();
-      this.albumCollection = this.userDataDoc.collection('albums', ref => ref.orderBy('release_date', 'desc'));
-      this.albums = this.albumCollection.valueChanges();
-      this.artistCollection = this.userDataDoc.collection('artists', ref => ref.orderBy('name'));
-      this.artists = this.artistCollection.valueChanges();
-      this.genreCollection = this.userDataDoc.collection('genres', ref => ref.orderBy('name'));
-      this.genres = this.genreCollection.valueChanges();
+    this.trackCollection = this.userDataDoc.collection('tracks', ref => ref.orderBy('added_at'));
+    this.tracks = this.trackCollection.valueChanges();
+    this.albumCollection = this.userDataDoc.collection('albums', ref => ref.orderBy('release_date', 'desc'));
+    this.albums = this.albumCollection.valueChanges();
+    this.artistCollection = this.userDataDoc.collection('artists', ref => ref.orderBy('name'));
+    this.artists = this.artistCollection.valueChanges();
+    this.genreCollection = this.userDataDoc.collection('genres', ref => ref.orderBy('name'));
+    this.genres = this.genreCollection.valueChanges();
 
-      this.mixesCollection = this.userDataDoc.collection('mixes', ref => ref.orderBy('name'));
-      this.mixes = this.mixesCollection.valueChanges();
+    this.mixesCollection = this.userDataDoc.collection('mixes', ref => ref.orderBy('name'));
+    this.mixes = this.mixesCollection.valueChanges();
 
-      this.userDataDoc.collection('tracks', ref => ref.limit(1))
-        .snapshotChanges()
-        .take(1).do(c => {
-          this.loaded = c.length > 0;
-          this.initialized = true;
-        })
-        .subscribe();
-    });
+    return this.userDataDoc.collection('tracks', ref => ref.limit(1))
+      .snapshotChanges()
+      .take(1).do(c => {
+        this.loaded = c.length > 0;
+        this.initialized = true;
+      })
+      .toPromise();
   }
 
   public loadPlaylistChunk() {
