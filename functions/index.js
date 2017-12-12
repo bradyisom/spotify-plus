@@ -12,7 +12,7 @@ admin.initializeApp({
 
 const whiteList = [
   'http://localhost:4200',
-  'http://spotimixify.bradyisom.com'
+  'https://spotimixify.bradyisom.com'
 ];
 const corsOptions = {
   origin: (origin, callback) => {
