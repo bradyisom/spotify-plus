@@ -13,6 +13,7 @@ import { AuthService } from '../auth.service';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
+  public loggingIn = false;
 
   private hashParams: any;
 
@@ -35,11 +36,13 @@ export class LoginComponent implements OnInit {
       localStorage.removeItem('login-state');
       localStorage.setItem('token', token);
       localStorage.setItem('tokenExpires', moment().add(expires, 'seconds').toISOString());
+      this.loggingIn = true;
       this.auth.login(token);
     } else {
       const existingToken = localStorage.getItem('token');
       const existingExpires = localStorage.getItem('tokenExpires');
       if (existingToken && moment(existingExpires).isAfter(moment())) {
+        this.loggingIn = true;
         this.auth.login(existingToken);
       }
     }

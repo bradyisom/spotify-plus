@@ -72,7 +72,8 @@ const appRoutes: Routes = [
       storageBucket: 'spotify-plus.appspot.com',
       messagingSenderId: '737874093570',
     }),
-    AngularFirestoreModule.enablePersistence()
+    // AngularFirestoreModule.enablePersistence()
+    AngularFirestoreModule,
   ],
   providers: [
     AuthService,

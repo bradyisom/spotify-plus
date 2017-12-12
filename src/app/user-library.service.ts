@@ -54,7 +54,8 @@ export class UserLibraryService {
   private userDataDoc: AngularFirestoreDocument<any>;
 
   private _playlistOffset = 0;
-  private _playlistPageSize = 15;
+  // private _playlistPageSize = 15;
+  private _playlistPageSize = 50;
   private _playlistsLoading = false;
   private _playlistsDone = false;
   private _playlistCollection = new BehaviorSubject<any>([]);
@@ -109,25 +110,70 @@ export class UserLibraryService {
       .toPromise();
   }
 
+  public startLoadPlaylistChunks() {
+    this._playlistOffset = 0;
+    this._playlistsLoading = false;
+    this._playlistsDone = false;
+    this._playlistCollection.next([]);
+    this.playlists = this._playlistCollection.asObservable()
+      .scan((acc, val) => acc.concat(val));
+    this.loadPlaylistChunk();
+  }
+
   public loadPlaylistChunk() {
     if (this._playlistsDone || this._playlistsLoading) {
       return;
     }
     this._playlistsLoading = true;
-    this.userDataDoc.collection('playlists', ref => {
-      return ref.orderBy('index').startAt(this._playlistOffset).limit(this._playlistPageSize);
-    }).snapshotChanges().take(1).map(arr => {
-      return arr.map(snap => {
-        return snap.payload.doc.data();
-      });
-    }).subscribe((chunk) => {
-      if (chunk.length < this._playlistPageSize) {
+
+    this.spotify.getUserPlaylists(this.user.id, {
+      offset: this._playlistOffset,
+      limit: this._playlistPageSize
+    }).then((chunk) => {
+      if (chunk.items.length < this._playlistPageSize) {
         this._playlistsDone = true;
       }
-      this._playlistCollection.next(chunk);
+      chunk.items.forEach((playlist) => {
+        (<any>playlist).ownerDisplay = playlist.owner.display_name ? playlist.owner.display_name : playlist.owner.id;
+      });
+      this._playlistCollection.next(chunk.items);
       this._playlistsLoading = false;
     });
     this._playlistOffset += this._playlistPageSize;
+  }
+  // public loadPlaylistChunk() {
+  //   if (this._playlistsDone || this._playlistsLoading) {
+  //     return;
+  //   }
+  //   this._playlistsLoading = true;
+  //   this.userDataDoc.collection('playlists', ref => {
+  //     return ref.orderBy('index').startAt(this._playlistOffset).limit(this._playlistPageSize);
+  //   }).snapshotChanges().take(1).map(arr => {
+  //     return arr.map(snap => {
+  //       return snap.payload.doc.data();
+  //     });
+  //   }).subscribe((chunk) => {
+  //     if (chunk.length < this._playlistPageSize) {
+  //       this._playlistsDone = true;
+  //     }
+  //     this._playlistCollection.next(chunk);
+  //     this._playlistsLoading = false;
+  //   });
+  //   this._playlistOffset += this._playlistPageSize;
+  // }
+
+  public loadAllPlaylists() {
+    if (!this._playlists || !this._playlists.length) {
+      this.loading = true;
+      this._playlists = [];
+      this.playlistCount = 0;
+      this.playlistsLoaded = 0;
+      return this.loadUserPlaylists().then(() => {
+        return this._playlists = _.flatten(this._playlists);
+      });
+    } else {
+      return Promise.resolve(this._playlists);
+    }
   }
 
   public loadLibrary() {
@@ -315,17 +361,29 @@ export class UserLibraryService {
     playlists: any[],
     savePlaylist?: boolean,
     remixId?: string,
+    existing?: any,
   }): Promise<any> {
     this.creatingPlaylist = true;
 
     let newId: string;
+    if (options.existing) {
+      newId = options.existing.id;
+    }
     return this.getMixTracks(options.playlists, approxTime).then(() => {
-      return this.spotify.createPlaylist(this.user.id, {
-        name: name
-      });
-    }).then((newPlaylist) => {
-      newId = newPlaylist.id;
-      return this.addTracksToPlaylist(newId, this.uniqueTracks);
+      if (newId) {
+        return this.spotify.changePlaylistDetails(this.user.id, newId, {
+          name: name
+        });
+      } else {
+        return this.spotify.createPlaylist(this.user.id, {
+          name: name
+        });
+      }
+    }).then((newPlaylist: any) => {
+      if (!newId) {
+        newId = newPlaylist.id;
+      }
+      return this.addTracksToPlaylist(newId, this.uniqueTracks, !!options.existing);
     }).then(() => {
       return this.spotify.getPlaylist(this.user.id, newId);
     }).then((newPlaylist) => {
@@ -351,6 +409,10 @@ export class UserLibraryService {
     }).then(() => {
       this.createdPlaylist = true;
     });
+  }
+
+  public getMix(mixId: string) {
+    return this.userDataDoc.collection('mixes').doc(mixId);
   }
 
   private getMixTracks(playlists: any[], approxTime: number) {

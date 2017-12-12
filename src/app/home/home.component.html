@@ -11,6 +11,10 @@
         <mat-list-item *ngFor="let mix of mixes">
           <img matListAvatar [src]="mix.images[mix.images.length-1]?.url">
           <p matLine>{{mix.name}}</p>
+          <button mat-icon-button routerLink="/library"
+            [queryParams]="{ mixId: mix.id }">
+            <mat-icon>edit</mat-icon>
+          </button>
           <button mat-icon-button (click)="library.remix(mix)">
             <mat-icon>autorenew</mat-icon>
           </button>
@@ -21,17 +25,18 @@
       </mat-list>
     </mat-card-content>
     <mat-card-actions *ngIf="library.initialized">
-        <button mat-raised-button color="primary" (click)="library.loadLibrary()"
+        <!-- <button mat-raised-button color="primary" (click)="library.loadLibrary()"
           *ngIf="!library.loading">
           <span *ngIf="!library.loaded">LOAD LIBRARY</span>
           <span *ngIf="library.loaded">RELOAD LIBRARY</span>
         </button>
         <button mat-raised-button color="primary" routerLink="/library"
-          *ngIf="!library.loading && library.loaded">CREATE A NEW MIX</button>
+          *ngIf="!library.loading && library.loaded">CREATE A NEW MIX</button>-->
+        <button mat-raised-button color="primary" routerLink="/library">CREATE A NEW MIX</button>
     </mat-card-actions>
   </mat-card>
 
-  <div class="progress-section" *ngIf="library.playlistCount">
+  <!-- <div class="progress-section" *ngIf="library.playlistCount">
       <div>Playlists loaded: {{library.playlistsLoaded}} / {{library.playlistCount}}</div>
       <mat-progress-bar color="primary"
       mode="determinate"
@@ -57,5 +62,5 @@
   </div>
   <div class="progress-section" *ngIf="library.genreCount">
       <div>Genres: {{library.genreCount}}</div>
-  </div>
+  </div> -->
 </div>

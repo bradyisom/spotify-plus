@@ -16,23 +16,52 @@ import { UserLibraryService } from '../user-library.service';
 })
 export class LibraryViewComponent implements OnInit {
 
+  public playlistCollection: any[];
   public playlistName = 'My new playlist';
   public playlistTime = 4;
   public savePlaylist = true;
+  public loading = false;
+
+  private existingMix: any;
 
   @ViewChild('playlists') public playlists: MatSelectionList;
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     public library: UserLibraryService,
   ) { }
 
   ngOnInit() {
     if (!this.library.user) {
       this.router.navigate(['/']);
-    } else {
-      this.library.loadPlaylistChunk();
+      return;
     }
+    const mixId = this.route.snapshot.queryParams['mixId'];
+    this.loading = !!mixId;
+
+    this.library.reset();
+    this.library.loadAllPlaylists().then((playlists) => {
+      this.playlistCollection = playlists;
+
+      if (mixId) {
+        this.library.getMix(mixId).valueChanges().subscribe((mix) => {
+          this.existingMix = mix;
+          this.playlistName = this.existingMix.name;
+          this.playlistTime = Math.floor(this.existingMix.time / 60);
+
+          const selected = this.playlists.options.filter((item) => {
+            return !!_.find(this.existingMix.playlists, (p) => p.id === item.value.id);
+          });
+          selected.forEach((playlist) => {
+            const existing = _.find(this.existingMix.playlists, (p) => p.id === playlist.value.id);
+            playlist.value.weight = existing.weight;
+            playlist.toggle();
+          });
+          this.loading = false;
+        });
+      }
+    });
   }
 
   getId(object: any) {
@@ -44,6 +73,7 @@ export class LibraryViewComponent implements OnInit {
     this.library.createMix(this.playlistName, this.playlistTime * 60, {
       playlists: selectedPlaylists,
       savePlaylist: this.savePlaylist,
+      existing: this.existingMix,
     });
     console.log('playlists', selectedPlaylists);
   }

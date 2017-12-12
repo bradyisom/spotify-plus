@@ -2,10 +2,15 @@
   <mat-card>
     <mat-card-title-group>
       <img mat-card-sm-image [src]="library.user.images[0].url">
-      <mat-card-title>{{library.user.display_name}}</mat-card-title>
+      <mat-card-title>
+          <button mat-icon-button routerLink="/home">
+            <mat-icon>home</mat-icon>
+          </button>
+          {{library.user.display_name}}
+      </mat-card-title>
     </mat-card-title-group>
     <mat-card-content>
-      <div *ngIf="!library.createdPlaylist">
+      <div *ngIf="!library.createdPlaylist && !loading">
         <mat-input-container>
           <input matInput #playlistNameEl type="text" [(ngModel)]="playlistName"
             (focus)="playlistNameEl.select()"
@@ -24,6 +29,9 @@
               [(ngModel)]="playlist.value.weight"></mat-slider>
           </div>
         </div>
+      </div>
+      <div *ngIf="loading">
+        Loading...
       </div>
       <div *ngIf="library.creatingPlaylist && !library.createdPlaylist">
         Creating playlist...
@@ -59,6 +67,17 @@
 
   <mat-tab-group>
     <mat-tab label="Playlists">
+      <mat-selection-list #playlists>
+        <mat-list-option *ngFor="let playlist of playlistCollection; trackBy getId"
+            [value]="playlist">
+          <img matListAvatar [src]="playlist.images[playlist.images.length-1]?.url">
+          <h3 matLine>{{ playlist.name }}</h3>
+          <p matLine>{{playlist.ownerDisplay}} - {{ playlist.tracks.total }} tracks</p>
+        </mat-list-option>
+      </mat-selection-list>
+    </mat-tab>
+
+    <!-- <mat-tab label="Playlists">
       <mat-selection-list #playlists
         infiniteScroll
         (scrolled)="library.loadPlaylistChunk()"
@@ -72,7 +91,8 @@
           <p matLine>{{playlist.ownerDisplay}} - {{ playlist.tracks.total }} tracks</p>
         </mat-list-option>
       </mat-selection-list>
-    </mat-tab>
+    </mat-tab> -->
+
     <!-- <mat-tab label="Artists">
       <mat-selection-list #artists>
         <mat-list-option *ngFor="let artist of library.artists | async"
